@@ -26,6 +26,7 @@ _llm_fabric_patterns() {
 
 # Bind the `_llm_fabric_patterns` function to the `llm` command for tab completion
 complete -F _llm_fabric_patterns llm
+
 compgen_with_prefix() {
     local patterns=$1 # Input patterns
     local word=$2     # Current word being completed
