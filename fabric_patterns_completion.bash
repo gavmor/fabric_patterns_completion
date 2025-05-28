@@ -46,7 +46,7 @@ test_llm_fabric_patterns_completion() {
     local previous_word="-t"
     local expected_patterns=("find_logical_fallacies" "identify_biases" "analyze_sentiment")
     COMPREPLY=()
-    COMP_WORDS=("llm" "-t" "fabric" ":")
+    COMP_WORDS=("llm" "-t" "fabric")
     COMP_CWORD=3
 
     # Call the completion function
