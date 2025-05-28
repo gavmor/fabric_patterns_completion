@@ -2,18 +2,20 @@ _llm_fabric_patterns() {
     # This function provides completions for the `llm` command with the `-t` flag
     # ie `llm -t fabric:<TAB>`, eg `llm -t fabric:find_logical_fallacies`.
     # It lists all available patterns in the `~/.cache/fabric_patterns_list.txt` file.
-    local current_word previous_word opts
+    local current_word previous_word wordlist
     COMPREPLY=()
     [[ $COMP_CWORD -ge 0 ]] && current_word="${COMP_WORDS[COMP_CWORD]}"
     [[ $COMP_CWORD -ge 1 ]] && previous_word="${COMP_WORDS[COMP_CWORD - 1]}"
-    opts=$(cat ~/.cache/fabric_patterns_list.txt 2>/dev/null)
+
+    wordlist=$(cat ~/.cache/fabric_patterns_list.txt 2>/dev/null)
 
     # Check if the previous word is -t or --type
     case "${previous_word}" in
-    "-t" | "--type")
-        # Add fabric: prefix to each option
-        opts=$(echo "$opts" | awk '{print "fabric:" $0}')
-        COMPREPLY=($(compgen -W "${opts}" -- "${current_word}"))
+    ":")
+        COMPREPLY=($(compgen_with_prefix "$wordlist" "${current_word#:}"))
+        ;;
+    "fabric")
+        COMPREPLY=($(compgen_with_prefix "$wordlist" "${current_word}"))
         ;;
     *)
         COMPREPLY=()
@@ -24,26 +26,27 @@ _llm_fabric_patterns() {
 
 # Bind the `_llm_fabric_patterns` function to the `llm` command for tab completion
 complete -F _llm_fabric_patterns llm
-# Unit test for the completion function:
+compgen_with_prefix() {
+    local patterns=$1 # Input patterns
+    local word=$2     # Current word being completed
+
+    word=${word#:} # Remove leading colon if present
+    compgen -W "$patterns" -- "$word"
+}
 
 test_llm_fabric_patterns_completion() {
-    # Let's write a unit test for the completion function:
-    local temp_file
-    temp_file=$(mktemp)
-    echo -e "find_logical_fallacies\nidentify_biases\nanalyze_sentiment" >"$temp_file"
-
     # Update the test function to use the temporary file
-    opts=$(cat "$temp_file" 2>/dev/null)
+    wordlist=$(cat "$temp_file" 2>/dev/null)
     # Create a mock file with patterns
     echo -e "find_logical_fallacies\nidentify_biases\nanalyze_sentiment" >~/.cache/fabric_patterns_list.txt
 
     # Simulate the completion environment
     local current_word="-t fabric:"
     local previous_word="-t"
-    local expected_patterns=("fabric:find_logical_fallacies" "fabric:identify_biases" "fabric:analyze_sentiment")
+    local expected_patterns=("find_logical_fallacies" "identify_biases" "analyze_sentiment")
     COMPREPLY=()
-    COMP_WORDS=("llm" "-t" "fabric:")
-    COMP_CWORD=2
+    COMP_WORDS=("llm" "-t" "fabric" ":")
+    COMP_CWORD=3
 
     # Call the completion function
     _llm_fabric_patterns
@@ -52,11 +55,38 @@ test_llm_fabric_patterns_completion() {
     echo "Expected patterns: ${expected_patterns[@]}"
     echo "Actual completions: ${COMPREPLY[@]}"
     if [[ "${COMPREPLY[@]}" == "${expected_patterns[@]}" ]]; then
-        echo "Test passed: COMPREPLY matches expected patterns."
+        echo -e "\033[0;32mTest passed: COMPREPLY matches expected patterns.\033[0m"
     else
-        echo "Test failed: COMPREPLY does not match expected patterns."
+        echo -e "\033[0;31mTest failed: COMPREPLY does not match expected patterns.\033[0m"
+        echo "Expected: ${expected_patterns[@]}"
+        echo "Got: ${COMPREPLY[@]}"
     fi
+}
 
-    # Clean up the temporary file
-    rm "$temp_file"
+# Test case:     COMP_WORDS=("llm" "-t" "fabric" ":find")
+test_llm_fabric_patterns_completion_case() {
+    # Create a mock file with patterns
+    echo -e "find_logical_fallacies\nidentify_biases\nanalyze_sentiment" >~/.cache/fabric_patterns_list.txt
+
+    # Simulate the completion environment
+    local current_word="-t fabric:"
+    local previous_word="-t"
+    local expected_patterns=("find_logical_fallacies")
+    COMPREPLY=()
+    COMP_WORDS=("llm" "-t" "fabric" ":" "find")
+    COMP_CWORD=4
+
+    # Call the completion function
+    _llm_fabric_patterns
+
+    # Verify the output
+    echo "Expected patterns: ${expected_patterns[@]}"
+    echo "Actual completions: ${COMPREPLY[@]}"
+    if [[ "${COMPREPLY[@]}" == "${expected_patterns[@]}" ]]; then
+        echo -e "\033[0;32mTest passed: COMPREPLY matches expected patterns.\033[0m"
+    else
+        echo -e "\033[0;31mTest failed: COMPREPLY does not match expected patterns.\033[0m"
+        echo "Expected: ${expected_patterns[@]}"
+        echo "Got: ${COMPREPLY[@]}"
+    fi
 }
