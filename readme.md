@@ -1,4 +1,4 @@
-# fabric-pattern-completion
+# fabric-patterns-completion
 
 A BASH function for tab completing [`llm`](https://github.com/simonw/llm) `-t fabric:<TAB>` with the patterns from [danielmiessler/fabric](https://github.com/danielmiessler/fabric/tree/main/patterns). Works with the [`llm-fabric-patterns`](https://github.com/simonw/llm-templates-fabric) plugin.
 
@@ -6,7 +6,7 @@ A BASH function for tab completing [`llm`](https://github.com/simonw/llm) `-t fa
 
 ```bash
 # Add this to your .bashrc or .bash_profile
-source path/to/fabric__patterns_completion.sh
+source path/to/fabric_patterns_completion.sh
 ```
 
 ## Usage
